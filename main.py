@@ -39,7 +39,7 @@ def get_lists_of_commands(op: int, ip: str, password: str, hostname: str) -> dic
     return dicionario_listas
 
 def main():
-    st.title("TA - Arvore de comandos")
+    st.title("Verificacao de comandos")
     
     st.markdown("## Selecione o modelo e informe os dados")
     # Seleção do modelo utilizando selectbox; as chaves do dicionário serão usadas internamente
