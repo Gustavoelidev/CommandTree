@@ -1,13 +1,14 @@
 import streamlit as st
+import emoji
 import time
 import json
 from utils.get_cli_commands import GetCommands
 from utils.save_tree_feature import save_tree_features
 from utils.compare_versions import compare_firmware_version
 
+# Carrega o CSS customizado
 with open("./styles/styles.css", "r", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
 
 # Modelos já testados com o sistema
 models = {1: "DUT1", }
@@ -39,7 +40,7 @@ def get_lists_of_commands(op: int, ip: str, password: str, hostname: str) -> dic
     return dicionario_listas
 
 def main():
-    st.title("Verificacao de comandos")
+    st.title("Verificação de comandos")
     
     st.markdown("## Selecione o modelo e informe os dados")
     # Seleção do modelo utilizando selectbox; as chaves do dicionário serão usadas internamente
@@ -50,8 +51,8 @@ def main():
     ip = st.text_input("Digite o endereço IPv4 (sem máscara):")
     password = st.text_input("Digite a senha do DUT:", type="password")
     hostname = st.text_input("Digite o hostname configurado no DUT:")
-    
-    if st.button("Iniciar verificação"):
+
+    if st.button("▶ Iniciar"):
         if not ip:
             st.error("Por favor, informe um endereço IP.")
         elif not check_ip(ip):
@@ -61,40 +62,50 @@ def main():
         elif not hostname:
             st.error("Por favor, informe o hostname.")
         else:
-            with st.spinner("Conectando e obtendo comandos..."):
-                try:
-                    # Obtém os comandos e exibe os resultados
-                    dicionario = get_lists_of_commands(selected_model, ip, password, hostname)
-                    to_compare(models.get(selected_model), dicionario)
-                    st.success("Comandos obtidos com sucesso!")
-                    
-                    # Exibição dos dados do firmware
-                    version_data = dicionario.get("__version_data", [])
-                    if version_data:
-                        st.markdown("### Dados do Firmware")
-                        st.write("Firmware:", version_data[0] if len(version_data) > 0 else "N/A")
-                        st.write("Bootloader:", version_data[1] if len(version_data) > 1 else "N/A")
-                        st.write("Compiled:", version_data[2] if len(version_data) > 2 else "N/A")
-                    
-                    # Exibição dos comandos de cada nível utilizando st.json
-                    st.markdown("### Comandos")
-                    st.subheader("Guest 1")
-                    st.json(dicionario.get("__commands_guest1"))
-                    
-                    st.subheader("Guest 2")
-                    st.json(dicionario.get("__commands_guest2"))
-                    
-                    st.subheader("Guest 3")
-                    st.json(dicionario.get("__commands_guest3"))
-                    
-                    st.subheader("Guest 4")
-                    st.json(dicionario.get("__commands_guest4"))
-                    
-                    st.subheader("Guest 5")
-                    st.json(dicionario.get("__commands_guest5"))
-                    
-                except Exception as e:
-                    st.error(f"Ocorreu um erro: {e}")
+            # Cria um container para simular a saída de um terminal
+            terminal_output = st.empty()
+            logs = []
+
+            def log(message: str):
+                logs.append(message)
+                # Atualiza o container com as mensagens em estilo de código (monoespaçado)
+                terminal_output.code("\n".join(logs))
+
+            try:
+                log("Iniciando conexão com o DUT...")
+                time.sleep(1)  # Simulação de tempo de conexão
+
+                log("Conectando e obtendo comandos...")
+                dicionario = get_lists_of_commands(selected_model, ip, password, hostname)
+                log("Comandos obtidos com sucesso!")
+
+                log("Comparando versão do firmware...")
+                to_compare(models.get(selected_model), dicionario)
+                log("Firmware verificado com sucesso!")
+                
+                # Exibição dos dados do firmware
+                version_data = dicionario.get("__version_data", [])
+                if version_data:
+                    log("Dados do Firmware:")
+                    log(f"Firmware: {version_data[0] if len(version_data) > 0 else 'N/A'}")
+                    log(f"Bootloader: {version_data[1] if len(version_data) > 1 else 'N/A'}")
+                    log(f"Compiled: {version_data[2] if len(version_data) > 2 else 'N/A'}")
+                
+                # Exibição dos comandos de cada nível
+                log("Exibindo comandos:")
+                log("Guest 1:")
+                log(json.dumps(dicionario.get("__commands_guest1"), indent=2, ensure_ascii=False))
+                log("Guest 2:")
+                log(json.dumps(dicionario.get("__commands_guest2"), indent=2, ensure_ascii=False))
+                log("Guest 3:")
+                log(json.dumps(dicionario.get("__commands_guest3"), indent=2, ensure_ascii=False))
+                log("Guest 4:")
+                log(json.dumps(dicionario.get("__commands_guest4"), indent=2, ensure_ascii=False))
+                log("Guest 5:")
+                log(json.dumps(dicionario.get("__commands_guest5"), indent=2, ensure_ascii=False))
+                
+            except Exception as e:
+                log(f"Ocorreu um erro: {e}")
 
 if __name__ == '__main__':
     main()
