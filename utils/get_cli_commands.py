@@ -30,12 +30,17 @@ class GetCommands:
         r"tftp:": "tftp:/file",
         r"X.X.X.X": "1.1.1.1",
         r"X:X::X:X": "1:1::1:1",
-        r"TIME": "12:00:00"
+        r"TIME": "12:00:00",
+        r"H-H-H": "1-1-1",
     }
 
     # Placeholders específicos para cada nível de comando
     PLACEHOLDERS_GUEST3 = {**BASE_PLACEHOLDERS, **{
-        r"INTEGER<0-32>": "1"
+        r"INTEGER<0-32>": "1",
+        r"HEX<0-FFFFFFFFFFFFFFFE>": "F",
+        r"HEX<0-FFFFFFFF>": "F",
+        r"STRING": "Teste.py",
+        r"H-H-H": "1-1-1",
     }}
 
     PLACEHOLDERS_GUEST4 = {**BASE_PLACEHOLDERS, **{
@@ -43,7 +48,18 @@ class GetCommands:
         r"<(\d+)-(\d+)>": lambda m: m.group(1) if m.group(1) == m.group(2) else "1",
         r"HEX<\d+-\d+>": "1",
         r"STRING<\d+-\d+>": "1",
-        r"DATE": "08/12/2012"
+        r"DATE": "08/12/2012",
+        r"STRING<1-253>": "1",
+        r"STRING<1-256>": "1",
+        r"STRING<1-31>": "1",
+        r"STRING<1-15>": "1",
+        r"STRING<1-8>": "1",
+        r"X.X.X.X": "1.1.1.1",
+        r"<1-2>": "1/0/33",
+        r"<0-0>": "0",
+        r"HEX<0-FFFFFFFF>": "0",
+        r"H-H-H": "1-1-1",
+        r"STRING": "teste.tar"
     }}
 
     PLACEHOLDERS_GUEST5 = {**BASE_PLACEHOLDERS, **{
@@ -55,6 +71,22 @@ class GetCommands:
         r"HEX<1-FFFFFFFF>": "1",
         r"HEX<1-FFFFFFFFFFFFFFFE>": "1",
         r"STRING<(\d+)-(\d+)>": replace_integer,
+        r"STRING<1-256>": "1",
+        r"<0-0>": "0",
+        r"<1-1>": "1",
+        r"HEX<0-FFFFFFFF>": "0",
+        r"INTEGER<0,3,16-1048575>": "0",
+        r"STRING": "Teste.py",
+        r"H-H-H": "1-1-1",
+        r"STRING": "teste.tar",
+        r"STRING<1-31>": "1",
+        r"HEX<0-FFFFFFFFFFFFFFFE>": "F",
+        r"STRING<1-15>": "1",
+        r"STRING<1-8>": "1",
+        r"HEX<1-FFFE>": "F",
+        r"STRING<1-63>": "1",
+        r"STRING<11-19>": "1",
+
     }}
 
     def __init__(self, modelo: str, ip: str, password: str, hostname: str) -> None:
