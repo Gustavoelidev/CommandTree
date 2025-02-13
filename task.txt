@@ -1,0 +1,4 @@
+Terminar o nivel guest - Switch
+Fazer adaptação para Acces Point - AP
+Começar desenvolvimento nivel Exec - Switch
+Fazer adaptação para Acces Point - AP 

@@ -3,6 +3,9 @@ import sys
 import os
 import json
 
+st.set_page_config(
+    page_title="[QA] Comandos",
+)
 # Adiciona o diretório raiz ao sys.path para encontrar os módulos em utils
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -15,7 +18,7 @@ from utils.save_tree_feature import save_tree_features
 from utils.compare_versions import compare_firmware_version
 
 # Exemplo de modelos já testados (pode vir de outro módulo)
-models = {1: "DUT1"}
+models = {1: "SDC 5850-32H", 2:"AP RW6302MAX" }
 
 def obter_comandos_e_gerar_arquivo(op, ip, password, hostname):
     """
@@ -78,12 +81,18 @@ def main():
         elif not ip.replace(".", "").isdigit() or len(ip.split(".")) != 4:
             st.error("Endereço IP inválido!")
         else:
-            with st.spinner("Obtendo comandos e gerando arquivo..."):
-                # Executa a captura dos comandos e gera o arquivo com a árvore
-                dicionario = obter_comandos_e_gerar_arquivo(op, ip, password, hostname)
-                st.session_state["dicionario"] = dicionario
-                st.session_state["modelo"] = modelo_selecionado
-                st.success("Arquivo gerado com sucesso!")
+            try:
+                with st.spinner("Obtendo comandos e gerando arquivo..."):
+                    # Executa a captura dos comandos e gera o arquivo com a árvore
+                    dicionario = obter_comandos_e_gerar_arquivo(op, ip, password, hostname)
+                    st.session_state["dicionario"] = dicionario
+                    st.session_state["modelo"] = modelo_selecionado
+                    st.success("Arquivo gerado com sucesso!")
+            except Exception as e:
+                # Exibe a mensagem de erro na web
+                st.error(f"Ocorreu um erro: {e}")
+                # Encerra a função (ou simplesmente não prossegue com outras ações)
+                return
 
     # Se os comandos já foram obtidos, apresenta as opções para o usuário
     if "dicionario" in st.session_state:

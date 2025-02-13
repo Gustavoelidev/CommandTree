@@ -7,7 +7,7 @@ from utils.compare_versions import compare_firmware_version
 
 
 # Modelos já testados com o sistema
-models = {1: "DUT1",  }
+models = {1: "SDC 5850-32H", 2:"AP RW6302MAX" }
 
 
 def check_ip(ip) -> None:

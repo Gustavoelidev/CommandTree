@@ -4819,12 +4819,7 @@ display
 │   │   │       └── STRING<1-63>
 │   │   ├── name
 │   │   │   └── STRING<1-63>
-│   │   │       ├── >
-│   │   │       ├── >>
-│   │   │       ├── peer-device
-│   │   │       ├── with-peer-device
-│   │   │       ├── |
-│   │   │       └── <cr>
+│   │   │       └── ^
 │   │   ├── user-defined
 │   │   │   ├── INTEGER<5000-5999>
 │   │   │   │   ├── >
@@ -5679,7 +5674,23 @@ display
 │   │   │       └── ipv6
 │   │   ├── policy
 │   │   │   ├── STRING<1-31>
-│   │   │   │   └── ^
+│   │   │   │   ├── >
+│   │   │   │   ├── >>
+│   │   │   │   ├── ack-flood
+│   │   │   │   ├── dns-flood
+│   │   │   │   ├── fin-flood
+│   │   │   │   ├── flood
+│   │   │   │   ├── http-flood
+│   │   │   │   ├── icmp-flood
+│   │   │   │   ├── icmpv6-flood
+│   │   │   │   ├── peer-device
+│   │   │   │   ├── rst-flood
+│   │   │   │   ├── syn-ack-flood
+│   │   │   │   ├── syn-flood
+│   │   │   │   ├── udp-flood
+│   │   │   │   ├── with-peer-device
+│   │   │   │   ├── |
+│   │   │   │   └── <cr>
 │   │   │   ├── |
 │   │   │   │   ├── begin
 │   │   │   │   ├── by-linenum
@@ -15028,7 +15039,13 @@ display
 │   ├── ha
 │   │   └── service-group
 │   │       ├── STRING<1-15>
-│   │       │   └── ^
+│   │       │   ├── >
+│   │       │   ├── >>
+│   │       │   ├── instance
+│   │       │   ├── peer-device
+│   │       │   ├── with-peer-device
+│   │       │   ├── |
+│   │       │   └── <cr>
 │   │       └── all
 │   │           ├── >
 │   │           ├── >>
@@ -16271,7 +16288,12 @@ display
 │   │   │   ├── >>
 │   │   │   │   └── STRING<1-63>
 │   │   │   ├── STRING<1-8>
-│   │   │   │   └── ^
+│   │   │   │   ├── >
+│   │   │   │   ├── >>
+│   │   │   │   ├── peer-device
+│   │   │   │   ├── with-peer-device
+│   │   │   │   ├── |
+│   │   │   │   └── <cr>
 │   │   │   ├── peer-device
 │   │   │   │   ├── >
 │   │   │   │   ├── >>
@@ -22792,7 +22814,12 @@ display
 │   │   │   └── <cr>
 │   │   ├── nickname
 │   │   │   └── HEX<1-FFFE>
-│   │   │       └── ^
+│   │   │       ├── >
+│   │   │       ├── >>
+│   │   │       ├── peer-device
+│   │   │       ├── with-peer-device
+│   │   │       ├── |
+│   │   │       └── <cr>
 │   │   ├── peer-device
 │   │   │   ├── >
 │   │   │   │   └── STRING<1-63>
@@ -29404,7 +29431,12 @@ display
 │   │   │       └── default
 │   │   ├── program
 │   │   │   ├── STRING<1-15>
-│   │   │   │   └── ^
+│   │   │   │   ├── >
+│   │   │   │   ├── >>
+│   │   │   │   ├── peer-device
+│   │   │   │   ├── with-peer-device
+│   │   │   │   ├── |
+│   │   │   │   └── <cr>
 │   │   │   └── all
 │   │   │       ├── >
 │   │   │       ├── >>
@@ -33555,7 +33587,12 @@ display
 │   │   │   ├── >>
 │   │   │   │   └── STRING<1-63>
 │   │   │   ├── STRING<1-63>
-│   │   │   │   └── ^
+│   │   │   │   ├── >
+│   │   │   │   ├── >>
+│   │   │   │   ├── peer-device
+│   │   │   │   ├── with-peer-device
+│   │   │   │   ├── |
+│   │   │   │   └── <cr>
 │   │   │   ├── peer-device
 │   │   │   │   ├── >
 │   │   │   │   ├── >>
@@ -35809,27 +35846,8 @@ display
 │   │   └── <cr>
 │   ├── time-range
 │   │   ├── STRING<1-32>
-│   │   │   ├── >
-│   │   │   │   └── STRING<1-63>
-│   │   │   ├── >>
-│   │   │   │   └── STRING<1-63>
-│   │   │   ├── peer-device
-│   │   │   │   ├── >
-│   │   │   │   ├── >>
-│   │   │   │   ├── |
-│   │   │   │   └── <cr>
-│   │   │   ├── with-peer-device
-│   │   │   │   ├── >
-│   │   │   │   ├── >>
-│   │   │   │   ├── |
-│   │   │   │   └── <cr>
-│   │   │   ├── |
-│   │   │   │   ├── begin
-│   │   │   │   ├── by-linenum
-│   │   │   │   ├── count
-│   │   │   │   ├── exclude
-│   │   │   │   └── include
-│   │   │   └── <cr>
+│   │   │   └── ^
+│   │   │       └── ^
 │   │   └── all
 │   │       ├── >
 │   │       │   └── STRING<1-63>
@@ -37139,27 +37157,8 @@ display
 │   │   │   └── STRING<1-63>
 │   │   │       └── <cr>
 │   │   ├── STRING<1-31>
-│   │   │   ├── >
-│   │   │   │   └── STRING<1-63>
-│   │   │   ├── >>
-│   │   │   │   └── STRING<1-63>
-│   │   │   ├── peer-device
-│   │   │   │   ├── >
-│   │   │   │   ├── >>
-│   │   │   │   ├── |
-│   │   │   │   └── <cr>
-│   │   │   ├── with-peer-device
-│   │   │   │   ├── >
-│   │   │   │   ├── >>
-│   │   │   │   ├── |
-│   │   │   │   └── <cr>
-│   │   │   ├── |
-│   │   │   │   ├── begin
-│   │   │   │   ├── by-linenum
-│   │   │   │   ├── count
-│   │   │   │   ├── exclude
-│   │   │   │   └── include
-│   │   │   └── <cr>
+│   │   │   └── ^
+│   │   │       └── ^
 │   │   ├── peer-device
 │   │   │   ├── >
 │   │   │   │   └── STRING<1-63>
@@ -44604,7 +44603,7 @@ reset
 │   ├── attack-defense
 │   │   ├── policy
 │   │   │   └── STRING<1-31>
-│   │   │       └── ^
+│   │   │       └── flood
 │   │   └── statistics
 │   │       ├── interface
 │   │       │   ├── GigabitEthernet
@@ -46230,7 +46229,7 @@ scheduler
 │       │       └── ^
 │       └── delay
 │           └── STRING<1-6>
-│               └── ^
+│               └── <cr>
 scp
 │   ├── STRING<1-253>
 │   └── ipv6
@@ -46453,12 +46452,7 @@ show
 │   │   │       └── STRING<1-63>
 │   │   ├── name
 │   │   │   └── STRING<1-63>
-│   │   │       ├── >
-│   │   │       ├── >>
-│   │   │       ├── peer-device
-│   │   │       ├── with-peer-device
-│   │   │       ├── |
-│   │   │       └── <cr>
+│   │   │       └── <SDC
 │   │   ├── user-defined
 │   │   │   ├── INTEGER<5000-5999>
 │   │   │   │   ├── >
@@ -47313,7 +47307,23 @@ show
 │   │   │       └── ipv6
 │   │   ├── policy
 │   │   │   ├── STRING<1-31>
-│   │   │   │   └── <SDC
+│   │   │   │   ├── >
+│   │   │   │   ├── >>
+│   │   │   │   ├── ack-flood
+│   │   │   │   ├── dns-flood
+│   │   │   │   ├── fin-flood
+│   │   │   │   ├── flood
+│   │   │   │   ├── http-flood
+│   │   │   │   ├── icmp-flood
+│   │   │   │   ├── icmpv6-flood
+│   │   │   │   ├── peer-device
+│   │   │   │   ├── rst-flood
+│   │   │   │   ├── syn-ack-flood
+│   │   │   │   ├── syn-flood
+│   │   │   │   ├── udp-flood
+│   │   │   │   ├── with-peer-device
+│   │   │   │   ├── |
+│   │   │   │   └── <cr>
 │   │   │   ├── |
 │   │   │   │   ├── begin
 │   │   │   │   ├── by-linenum
@@ -56720,7 +56730,13 @@ show
 │   ├── ha
 │   │   └── service-group
 │   │       ├── STRING<1-15>
-│   │       │   └── <SDC
+│   │       │   ├── >
+│   │       │   ├── >>
+│   │       │   ├── instance
+│   │       │   ├── peer-device
+│   │       │   ├── with-peer-device
+│   │       │   ├── |
+│   │       │   └── <cr>
 │   │       └── all
 │   │           ├── >
 │   │           ├── >>
@@ -57963,7 +57979,12 @@ show
 │   │   │   ├── >>
 │   │   │   │   └── STRING<1-63>
 │   │   │   ├── STRING<1-8>
-│   │   │   │   └── <SDC
+│   │   │   │   ├── >
+│   │   │   │   ├── >>
+│   │   │   │   ├── peer-device
+│   │   │   │   ├── with-peer-device
+│   │   │   │   ├── |
+│   │   │   │   └── <cr>
 │   │   │   ├── peer-device
 │   │   │   │   ├── >
 │   │   │   │   ├── >>
@@ -64484,7 +64505,12 @@ show
 │   │   │   └── <cr>
 │   │   ├── nickname
 │   │   │   └── HEX<1-FFFE>
-│   │   │       └── <SDC
+│   │   │       ├── >
+│   │   │       ├── >>
+│   │   │       ├── peer-device
+│   │   │       ├── with-peer-device
+│   │   │       ├── |
+│   │   │       └── <cr>
 │   │   ├── peer-device
 │   │   │   ├── >
 │   │   │   │   └── STRING<1-63>
@@ -71103,7 +71129,12 @@ show
 │   │   │       └── default
 │   │   ├── program
 │   │   │   ├── STRING<1-15>
-│   │   │   │   └── <SDC
+│   │   │   │   ├── >
+│   │   │   │   ├── >>
+│   │   │   │   ├── peer-device
+│   │   │   │   ├── with-peer-device
+│   │   │   │   ├── |
+│   │   │   │   └── <cr>
 │   │   │   └── all
 │   │   │       ├── >
 │   │   │       ├── >>
@@ -75254,7 +75285,12 @@ show
 │   │   │   ├── >>
 │   │   │   │   └── STRING<1-63>
 │   │   │   ├── STRING<1-63>
-│   │   │   │   └── <SDC
+│   │   │   │   ├── >
+│   │   │   │   ├── >>
+│   │   │   │   ├── peer-device
+│   │   │   │   ├── with-peer-device
+│   │   │   │   ├── |
+│   │   │   │   └── <cr>
 │   │   │   ├── peer-device
 │   │   │   │   ├── >
 │   │   │   │   ├── >>
@@ -77508,27 +77544,8 @@ show
 │   │   └── <cr>
 │   ├── time-range
 │   │   ├── STRING<1-32>
-│   │   │   ├── >
-│   │   │   │   └── STRING<1-63>
-│   │   │   ├── >>
-│   │   │   │   └── STRING<1-63>
-│   │   │   ├── peer-device
-│   │   │   │   ├── >
-│   │   │   │   ├── >>
-│   │   │   │   ├── |
-│   │   │   │   └── <cr>
-│   │   │   ├── with-peer-device
-│   │   │   │   ├── >
-│   │   │   │   ├── >>
-│   │   │   │   ├── |
-│   │   │   │   └── <cr>
-│   │   │   ├── |
-│   │   │   │   ├── begin
-│   │   │   │   ├── by-linenum
-│   │   │   │   ├── count
-│   │   │   │   ├── exclude
-│   │   │   │   └── include
-│   │   │   └── <cr>
+│   │   │   └── <SDC
+│   │   │       └── <SDC
 │   │   └── all
 │   │       ├── >
 │   │       │   └── STRING<1-63>
@@ -78838,27 +78855,8 @@ show
 │   │   │   └── STRING<1-63>
 │   │   │       └── <cr>
 │   │   ├── STRING<1-31>
-│   │   │   ├── >
-│   │   │   │   └── STRING<1-63>
-│   │   │   ├── >>
-│   │   │   │   └── STRING<1-63>
-│   │   │   ├── peer-device
-│   │   │   │   ├── >
-│   │   │   │   ├── >>
-│   │   │   │   ├── |
-│   │   │   │   └── <cr>
-│   │   │   ├── with-peer-device
-│   │   │   │   ├── >
-│   │   │   │   ├── >>
-│   │   │   │   ├── |
-│   │   │   │   └── <cr>
-│   │   │   ├── |
-│   │   │   │   ├── begin
-│   │   │   │   ├── by-linenum
-│   │   │   │   ├── count
-│   │   │   │   ├── exclude
-│   │   │   │   └── include
-│   │   │   └── <cr>
+│   │   │   └── <SDC
+│   │   │       └── <SDC
 │   │   ├── peer-device
 │   │   │   ├── >
 │   │   │   │   └── STRING<1-63>
@@ -79430,7 +79428,8 @@ tar
 │   ├── create
 │   │   ├── archive-file
 │   │   │   └── STRING
-│   │   │       └── ^
+│   │   │       ├── source
+│   │   │       └── verbose
 │   │   └── gz
 │   │       └── archive-file
 │   │           └── STRING
