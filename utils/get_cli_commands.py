@@ -51,6 +51,7 @@ PLACEHOLDERS_GUEST3: List[PlaceholderType] = BASE_PLACEHOLDERS_NO_STRING + [
     (r"H-H-H", "1-1-1"),
     # Placeholder genérico para STRING
     (r"STRING", "Teste.py"),
+    (r"STRING<4-4>", "444"),
 ]
 
 PLACEHOLDERS_GUEST4: List[PlaceholderType] = [
@@ -78,7 +79,7 @@ PLACEHOLDERS_GUEST5: List[PlaceholderType] = [
     (r"<2>", "2"),
     (r"<1-2>", "2"),
     (r"<0-0>", "0"),
-    (r"<1-1>", "1"),
+    (r"<1-1>", ["1/0/1", "1"]),
     (r"HEX<1-FFFE>", "F"),
     (r"HEX<1-FFFFFFFF>", "1"),
     (r"HEX<1-FFFFFFFFFFFFFFFE>", "1"),
@@ -87,6 +88,8 @@ PLACEHOLDERS_GUEST5: List[PlaceholderType] = [
     (r"HEX<\d+-\d+>", "1"),
     (r"DATE", "08/12/2012"),
     (r"STRING", ["Teste.py", "teste.tar"]),
+    (r"STRING<1-63>", "Teste"),
+    (r"STRING<1-31>", "Teste"),
     (r"H-H-H", "1-1-1"),
 ]
 
@@ -206,12 +209,12 @@ class GetCommands:
             # Utiliza expressões regulares para extrair as informações relevantes
             # 1. Extrai a versão do sistema (OS)
             os_version_match = re.search(
-                r"INTELBRAS OS Software,\s*Version\s*([\d\.]+,\s*ESS\s*\d+)", 
+                r"INTELBRAS OS Software,\s*Version\s*([\d\.]+,\s*(?:ESS\s*\d+|Release\s*\d+))", 
                 raw_response
             )
             # 2. Extrai a versão da imagem de boot
             boot_version_match = re.search(
-                r"Boot image version:\s*([\d\.]+,\s*ESS\s*\d+)", 
+               r"Boot image version:\s*([\d\.]+,\s*(?:ESS\s*\d+|Release\s*\d+))", 
                 raw_response
             )
             # 3. Extrai a data de compilação (primeira ocorrência)
