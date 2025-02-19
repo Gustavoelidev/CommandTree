@@ -2,13 +2,17 @@ import os
 
 def filter_commands(commands: list) -> list:
     """
-    Remove comandos que começam com "serviewcommands:" ou "user view commands:".
+    Remove comandos que começam com "serviewcommands:" ou "user view commands:" 
+    e também aqueles que são apenas "?".
     A verificação é feita após remover espaços à esquerda e convertendo para minúsculas.
     """
     filtered = []
     for cmd in commands:
         cmd_clean = cmd.strip()
         if cmd_clean.lower().startswith("serviewcommands:") or cmd_clean.lower().startswith("user view commands:"):
+            continue
+        # Ignora comandos que sejam apenas "?"
+        if cmd_clean == "?":
             continue
         filtered.append(cmd)
     return filtered
