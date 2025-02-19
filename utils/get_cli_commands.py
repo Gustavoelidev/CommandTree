@@ -1,44 +1,39 @@
 import telnetlib
-import time
 import logging
 import re
-from collections import OrderedDict
+from typing import List, Union, Tuple, Callable
 
 # Configuração do logging
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler("terminal.log"),  # Log será salvo neste arquivo
         logging.StreamHandler()               # Log também será exibido no console
     ]
 )
 
-def replace_integer(match):
-    # Extrai os dois números capturados e retorna o maior valor como string
+def replace_integer(match: re.Match) -> str:
+    """Retorna o maior valor entre dois inteiros capturados."""
     num1 = int(match.group(1))
     num2 = int(match.group(2))
     return str(max(num1, num2))
 
-def replace_string_numeric(match):
+def replace_string_numeric(match: re.Match) -> str:
+    """Retorna o valor máximo do intervalo definido no placeholder STRING."""
     min_val = int(match.group(1))
     max_val = int(match.group(2))
-    return str(max_val)  # Retorna o maior valor; se preferir o menor, use min_val
-    
-    # # Se a candidate for menor que o tamanho mínimo, preenche com "x"
-    # if len(candidate) < min_len:
-    #     candidate = candidate.ljust(min_len, "x")
-    # # Se for maior que o tamanho máximo, trunca
-    # if len(candidate) > max_len:
-    #     candidate = candidate[:max_len]
-    # return candidate
+    return str(max_val)
+
+# Definição do tipo para os placeholders:
+# Cada item é uma tupla composta de (padrão, substituição), onde substituição pode ser
+# uma string, uma lista de strings ou uma função que realiza a substituição.
+PlaceholderType = Tuple[str, Union[str, List[str], Callable[[re.Match], str]]]
 
 # ------------------------------
 # Placeholders
 # ------------------------------
-
-# BASE_PLACEHOLDERS (exceto o placeholder genérico para STRING)
-BASE_PLACEHOLDERS_NO_STRING = [
+BASE_PLACEHOLDERS_NO_STRING: List[PlaceholderType] = [
     (r"flash:", "flash:/file"),
     (r"http:", "http:/file"),
     (r"ftp:", "ftp:/file"),
@@ -49,24 +44,19 @@ BASE_PLACEHOLDERS_NO_STRING = [
     (r"H-H-H", "1-1-1"),
 ]
 
-# Para Guest3, os placeholders base são somados a alguns específicos.
-PLACEHOLDERS_GUEST3 = BASE_PLACEHOLDERS_NO_STRING + [
+PLACEHOLDERS_GUEST3: List[PlaceholderType] = BASE_PLACEHOLDERS_NO_STRING + [
     (r"INTEGER<0-32>", "1"),
     (r"HEX<0-FFFFFFFF>", "F"),
     (r"HEX<0-FFFFFFFFFFFFFFFE>", "F"),
     (r"H-H-H", "1-1-1"),
-    # Colocamos o placeholder genérico para STRING aqui (se necessário)
+    # Placeholder genérico para STRING
     (r"STRING", "Teste.py"),
 ]
 
-# Para Guest4, vamos garantir que o padrão com intervalo seja aplicado antes
-# do placeholder genérico para STRING.
-PLACEHOLDERS_GUEST4 = [
+PLACEHOLDERS_GUEST4: List[PlaceholderType] = [
     # Primeiro, o placeholder específico que retorna um número:
     (r"STRING<(\d+)-(\d+)>", replace_string_numeric),
-    # Em seguida, os demais placeholders base (sem o genérico de STRING)
 ] + BASE_PLACEHOLDERS_NO_STRING + [
-    # Outros placeholders específicos para Guest4:
     (r"INTEGER<(\d+)-(\d+)>", replace_integer),
     (r"<(\d+)-(\d+)>", lambda m: m.group(1) if m.group(1) == m.group(2) else "1"),
     (r"HEX<0-FFFFFFFF>", "0"),
@@ -76,12 +66,11 @@ PLACEHOLDERS_GUEST4 = [
     (r"<1-2>", "1/0/33"),
     (r"<0-0>", "0"),
     (r"H-H-H", "1-1-1"),
-    # Por fim, o placeholder genérico para STRING (caso não haja intervalo)
+    # Placeholder genérico para STRING
     (r"STRING", "teste.tar"),
 ]
 
-# Para Guest5, similarmente (ajuste conforme sua necessidade)
-PLACEHOLDERS_GUEST5 = [
+PLACEHOLDERS_GUEST5: List[PlaceholderType] = [
     (r"STRING<(\d+)-(\d+)>", replace_string_numeric),
 ] + BASE_PLACEHOLDERS_NO_STRING + [
     (r"INTEGER<(\d+)-(\d+)>", replace_integer),
@@ -102,116 +91,174 @@ PLACEHOLDERS_GUEST5 = [
 ]
 
 class GetCommands:
+    """
+    Classe responsável por estabelecer a conexão Telnet e obter comandos em
+    diferentes níveis (guest 1 a 5) a partir do dispositivo.
+    """
+    ESCAPE_CHAR = b'\x18'  # Caractere para cancelar comandos (Ctrl+X)
+
     def __init__(self, modelo: str, ip: str, password: str, hostname: str) -> None:
-        self.__modelo: str = modelo
-        self.__ip: str = ip
-        self.__password: str = password
-        self.__hostname: str = hostname
-        self.__connection: object = telnetlib.Telnet(self.__ip)
-        logging.info(f"Iniciando a conexão Telnet com o IP: {self.__ip}")
-        self.__version_data: list = self.new_connection(user="ped", hostname=self.__hostname, password=self.__password)
-        self.__commands_guest1: list = self.get_guest_commands1()
-        self.__commands_guest2: list = self.get_guest_commands2()
-        self.__commands_guest3: list = self.get_guest_commands3()
-        self.__commands_guest4: list = self.get_guest_commands4()
-        self.__commands_guest5: list = self.get_guest_commands5()
+        self._modelo: str = modelo
+        self._ip: str = ip
+        self._password: str = password
+        self._hostname: str = hostname
+        self._prompt: bytes = f"<{self._hostname}>".encode("ascii")
+        self._connection: telnetlib.Telnet = telnetlib.Telnet(self._ip)
+        logging.info(f"Iniciando a conexão Telnet com o IP: {self._ip}")
+        self._version_data: List[str] = self.new_connection(
+            user="admin", password=self._password, hostname=self._hostname
+        )
+        self._commands_guest1: List[str] = self.get_guest_commands1()
+        self._commands_guest2: List[str] = self.get_guest_commands2()
+        self._commands_guest3: List[str] = self.get_guest_commands3()
+        self._commands_guest4: List[str] = self.get_guest_commands4()
+        self._commands_guest5: List[str] = self.get_guest_commands5()
 
     @property
     def modelo(self) -> str:
-        return self.__modelo
+        return self._modelo
 
     @property
     def ip(self) -> str:
-        return self.__ip
+        return self._ip
 
     @property
     def firmware(self) -> str:
-        return self.__version_data[0]
+        return self._version_data[0]
 
     @property
     def bootloader(self) -> str:
-        return self.__version_data[1]
+        return self._version_data[1]
 
     @property
     def compiled(self) -> str:
-        return self.__version_data[2]
+        return self._version_data[2]
 
     @property
     def password(self) -> str:
-        return self.__password
+        return self._password
 
     def return_lists(self) -> dict:
+        """Retorna os dados de versão e as listas de comandos dos diferentes níveis."""
         return {
-            "__version_data": self.__version_data,
-            "__commands_guest1": self.__commands_guest1,
-            "__commands_guest2": self.__commands_guest2,
-            "__commands_guest3": self.__commands_guest3,
-            "__commands_guest4": self.__commands_guest4,
-            "__commands_guest5": self.__commands_guest5,
+            "version_data": self._version_data,
+            "commands_guest1": self._commands_guest1,
+            "commands_guest2": self._commands_guest2,
+            "commands_guest3": self._commands_guest3,
+            "commands_guest4": self._commands_guest4,
+            "commands_guest5": self._commands_guest5,
         }
 
-    def new_connection(self, user: str, password: str, hostname: str) -> list:
+    def new_connection(self, *, user: str, password: str, hostname: str) -> List[str]:
+        """
+        Realiza o login via Telnet, desabilita a paginação e retorna os dados de versão.
+        """
         try:
             logging.info("Realizando o login via Telnet...")
-            ret = self.__connection.read_until(b":", timeout=5)
-            if b'Login:' in ret:
-                self.__connection.write(user.encode("ascii") + b"\n")
+            ret = self._connection.read_until(b":", timeout=5)
+            if b"login:" in ret:
+                self._connection.write(f"{user}\n".encode("ascii"))
                 logging.debug(f"Login realizado com o usuário: {user}")
-            ret = self.__connection.read_until(b":", timeout=3)
+            ret = self._connection.read_until(b":", timeout=3)
             if b"Password:" in ret:
-                self.__connection.write(password.encode("ascii") + b"\n")
+                self._connection.write(f"{password}\n".encode("ascii"))
                 logging.debug("Senha enviada")
             else:
                 logging.error("Erro no Login: Não foi possível realizar o login")
-                print("Erro no Login")
-            ret = self.__connection.read_until(b'<' + self.__hostname.encode("ascii") + b'>')
-            if self.__hostname.encode("ascii") in ret:
-                self.__connection.write(b"screen-length disable\n")
-                ret = self.__connection.read_until(b'<' + self.__hostname.encode("ascii") + b'>')
-                if self.__hostname.encode("ascii") in ret:
-                    version: list = self.get_firmware_version()
+                raise ConnectionError("Erro no Login")
+            ret = self._connection.read_until(self._prompt)
+            if self._prompt in ret:
+                self._connection.write(b"screen-length disable\n")
+                ret = self._connection.read_until(self._prompt)
+                if self._prompt in ret:
+                    version = self.get_firmware_version()
                     logging.info(f"Versão do firmware: {version[0]}")
                     print(f"Version: {version[0]}")
                 else:
                     logging.error("Erro ao desabilitar a paginação")
-                    print("Erro 2")
+                    raise RuntimeError("Erro ao desabilitar a paginação")
             else:
                 logging.error("Erro de comunicação com o dispositivo. Hostname não encontrado.")
-                print("Erro 3")
-                exit(0)
+                raise ConnectionError("Hostname não encontrado.")
             return version
         except Exception as e:
             logging.error(f"Erro durante a conexão: {e}")
             raise
 
-    def get_firmware_version(self) -> list:
-        version = []
+    def get_firmware_version(self) -> List[str]:
+        """
+        Executa o comando 'display version' e extrai as informações do firmware,
+        versão da imagem de boot e data de compilação, registrando logs detalhados.
+        """
+        version: List[str] = []
         try:
-            logging.info("Obtendo a versão do firmware...")
-            self.__connection.write(b"display version\n")
-            ret = self.__connection.read_until(b'<' + self.__hostname.encode("ascii") + b'>').decode("utf-8").split("\n")
-            firmware = ret[10].split(": ")[1].replace("\r", "")
-            bootloader = ret[21].split(": ")[1].replace("\r", "").replace(" ", "")
-            compiled = ret[8].split(" Compiled")[1].replace("\r", "")
-            version.extend([firmware, bootloader, compiled])
-            logging.info(f"Firmware: {firmware}, Bootloader: {bootloader}, Compiled: {compiled}")
+            logging.info("Iniciando a obtenção da versão do firmware...")
+            
+            # Envia o comando e obtém a resposta completa
+            self._connection.write(b"display version\n")
+            raw_response = self._connection.read_until(self._prompt).decode("utf-8")
+            
+            # Log detalhado de cada linha da resposta
+            logging.debug("Resposta completa do comando 'display version':")
+            for idx, line in enumerate(raw_response.splitlines()):
+                logging.debug(f"Linha {idx}: {line}")
+            
+            # Utiliza expressões regulares para extrair as informações relevantes
+            # 1. Extrai a versão do sistema (OS)
+            os_version_match = re.search(
+                r"INTELBRAS OS Software,\s*Version\s*([\d\.]+,\s*ESS\s*\d+)", 
+                raw_response
+            )
+            # 2. Extrai a versão da imagem de boot
+            boot_version_match = re.search(
+                r"Boot image version:\s*([\d\.]+,\s*ESS\s*\d+)", 
+                raw_response
+            )
+            # 3. Extrai a data de compilação (primeira ocorrência)
+            compiled_match = re.search(
+                r"Compiled\s+([A-Za-z]+\s+\d+\s+\d+\s+[\d:]+)", 
+                raw_response
+            )
+            
+            # Validação dos resultados extraídos
+            if not os_version_match:
+                logging.error("Não foi possível extrair a versão do OS.")
+                raise ValueError("Formato da resposta não contém a versão do OS.")
+            if not boot_version_match:
+                logging.error("Não foi possível extrair a versão da imagem de boot.")
+                raise ValueError("Formato da resposta não contém a versão da imagem de boot.")
+            if not compiled_match:
+                logging.error("Não foi possível extrair a data de compilação.")
+                raise ValueError("Formato da resposta não contém a data de compilação.")
+            
+            os_version = os_version_match.group(1).strip()
+            boot_version = boot_version_match.group(1).strip()
+            compiled = compiled_match.group(1).strip()
+            
+            logging.debug(f"OS Version extraída: {os_version}")
+            logging.debug(f"Boot image version extraída: {boot_version}")
+            logging.debug(f"Compiled extraída: {compiled}")
+            
+            version.extend([os_version, boot_version, compiled])
+            logging.info(f"Informações extraídas - OS Version: {os_version}, "
+                        f"Boot Version: {boot_version}, Compiled: {compiled}")
+        
         except Exception as e:
             logging.error(f"Erro ao obter a versão do firmware: {e}")
             raise
+        
         return version
 
-    def substitute_placeholders(self, command: str, placeholders: list, root_command: str = "") -> str:
+
+    def substitute_placeholders(self, command: str, placeholders: List[PlaceholderType], root_command: str = "") -> str:
         """
         Aplica as substituições definidas na lista de placeholders sobre o comando.
-        A lista de placeholders deve ser uma lista de tuplas (pattern, replacement).
         """
         for pattern, replacement in placeholders:
-            # Caso especial para o placeholder "STRING"
             if pattern == r"STRING":
-                if "tar" in root_command.lower():
-                    candidate = "teste.tar"
-                else:
-                    candidate = replacement[0] if isinstance(replacement, list) else replacement
+                candidate = "teste.tar" if "tar" in root_command.lower() else (
+                    replacement[0] if isinstance(replacement, list) else replacement
+                )
                 command = re.sub(pattern, candidate, command)
             elif isinstance(replacement, list):
                 candidate_used = None
@@ -230,112 +277,116 @@ class GetCommands:
                 command = re.sub(pattern, replacement, command)
         return command
 
-    def get_guest_commands1(self) -> list:
+    def get_guest_commands1(self) -> List[str]:
+        """
+        Obtém os comandos do nível guest.
+        """
         logging.info("Obtendo os comandos do nível guest...")
-        commands = []
-        self.__connection.write(b"?")
-        ret = self.__connection.read_until(b'<' + self.__hostname.encode("ascii") + b'>').decode("utf-8").split("\n")
-        for i, v in enumerate(ret):
-            if len(ret) - 1 > i > 1:
-                if v != " \r" and "?" not in v:
-                    v = v[1:]
-                    v = v[:v.find("  ")].replace(" ", "")
-                    if v != "":
-                        commands.append(v)
+        commands: List[str] = []
+        self._connection.write(b"?")
+        ret = self._connection.read_until(self._prompt).decode("utf-8").splitlines()
+        # Processa as linhas ignorando as duas primeiras e a última
+        for line in ret[2:-1]:
+            if line.strip() and "?" not in line:
+                cmd = line[1:]  # Remove o primeiro caractere
+                cmd = cmd.split("  ")[0].replace(" ", "")
+                if cmd:
+                    commands.append(cmd)
         logging.debug(f"Comandos do nível guest: {commands}")
         return commands
 
-    def get_guest_commands2(self) -> list:
+    def _parse_guest_response(self, base_command: str, response_lines: List[str], start: int = 1, end: Union[int, None] = None) -> List[str]:
+        """
+        Extrai comandos da resposta do dispositivo, considerando a indentação.
+        """
+        commands: List[str] = []
+        baseline_indent: Union[int, None] = None
+        if end is None:
+            end = len(response_lines) - 1
+        for line in response_lines[start:end]:
+            if line.strip():
+                current_indent = len(line) - len(line.lstrip())
+                if baseline_indent is None:
+                    baseline_indent = current_indent
+                if current_indent == baseline_indent:
+                    command_part = line.strip().split()[0]
+                    if "denied" not in command_part:
+                        commands.append(f"{base_command} {command_part}")
+        return commands
+
+    def get_guest_commands2(self) -> List[str]:
+        """
+        Obtém os comandos do nível 2 guest.
+        """
         logging.info("Obtendo os comandos do nível 2 guest...")
-        commands = []
-        for i in self.__commands_guest1:
-            self.__connection.write(i.encode("ascii") + b" ?")
-            ret = (self.__connection.read_until(b'<' + self.__hostname.encode("ascii") + b'>' + i.encode("ascii"))
-                   .decode("utf-8").split("\n"))
-            for j, v in enumerate(ret):
-                if len(ret) - 1 > j > 0:
-                    if v != " \r" and "?" not in v:
-                        v = v[1:]
-                        v = v[:v.find("  ")].replace(" ", "")
-                        if v != "" and "denied" not in v:
-                            commands.append(i + " " + v)
-            self.__connection.write(chr(24).encode("ascii"))
+        commands: List[str] = []
+        for base_cmd in self._commands_guest1:
+            self._connection.write(f"{base_cmd} ?".encode("ascii"))
+            ret = self._connection.read_until(self._prompt + base_cmd.encode("ascii"), timeout=5)
+            response = ret.decode("utf-8").splitlines()
+            cmds = self._parse_guest_response(base_cmd, response, start=1, end=len(response) - 1)
+            commands.extend(cmds)
+            self._connection.write(self.ESCAPE_CHAR)
         logging.debug(f"Comandos do nível 2 guest: {commands}")
         return commands
 
-    def get_guest_commands3(self) -> list:
+    def get_guest_commands3(self) -> List[str]:
+        """
+        Obtém os comandos do nível 3 guest.
+        """
         logging.info("Obtendo os comandos do nível 3 guest...")
-        commands = []
-        for i in self.__commands_guest2:
-            command_to_send = self.substitute_placeholders(i, PLACEHOLDERS_GUEST3, root_command=i)
-            self.__connection.write(command_to_send.encode("ascii") + b" ?")
-            ret = (self.__connection.read_until(
-                b'<' + self.__hostname.encode("ascii") + b'>' + command_to_send.encode("ascii")
-            ).decode("utf-8").split("\n"))
-            baseline_indent = None
-            for j, line in enumerate(ret):
-                if 0 < j < len(ret) - 1 and line.strip():
-                    current_indent = len(line) - len(line.lstrip())
-                    if baseline_indent is None:
-                        baseline_indent = current_indent
-                    if current_indent == baseline_indent:
-                        command_part = line.strip().split()[0]
-                        commands.append(i + " " + command_part)
-            self.__connection.write(chr(24).encode("ascii"))
+        commands: List[str] = []
+        for base_cmd in self._commands_guest2:
+            command_to_send = self.substitute_placeholders(base_cmd, PLACEHOLDERS_GUEST3, root_command=base_cmd)
+            self._connection.write(f"{command_to_send} ?".encode("ascii"))
+            ret = self._connection.read_until(self._prompt + command_to_send.encode("ascii"), timeout=5)
+            response = ret.decode("utf-8").splitlines()
+            cmds = self._parse_guest_response(base_cmd, response, start=1, end=len(response) - 1)
+            commands.extend(cmds)
+            self._connection.write(self.ESCAPE_CHAR)
         logging.debug(f"Comandos do nível 3 guest: {commands}")
         return commands
 
-    def get_guest_commands4(self) -> list:
+    def get_guest_commands4(self) -> List[str]:
+        """
+        Obtém os comandos do nível 4 guest.
+        """
         logging.info("Obtendo os comandos do nível 4 guest...")
-        commands = []
-        for i in self.__commands_guest3:
-            command_to_send = self.substitute_placeholders(i, PLACEHOLDERS_GUEST4, root_command=i)
-            self.__connection.write(command_to_send.encode("ascii") + b" ?")
-            ret = (self.__connection.read_until(
-                    b"<" + self.__hostname.encode("ascii") + b">" + command_to_send.encode("ascii")
-                )
-                .decode("utf-8")
-                .split("\n")
-            )
-            baseline_indent = None
-            for j, line in enumerate(ret):
-                if 0 < j < len(ret) - 1 and line.strip():
-                    current_indent = len(line) - len(line.lstrip())
-                    if baseline_indent is None:
-                        baseline_indent = current_indent
-                    if current_indent == baseline_indent:
-                        command_part = line.strip().split()[0]
-                        commands.append(i + " " + command_part)
-            self.__connection.write(chr(24).encode("ascii"))
+        commands: List[str] = []
+        for base_cmd in self._commands_guest3:
+            command_to_send = self.substitute_placeholders(base_cmd, PLACEHOLDERS_GUEST4, root_command=base_cmd)
+            self._connection.write(f"{command_to_send} ?".encode("ascii"))
+            ret = self._connection.read_until(self._prompt + command_to_send.encode("ascii"), timeout=5)
+            response = ret.decode("utf-8").splitlines()
+            cmds = self._parse_guest_response(base_cmd, response, start=1, end=len(response) - 1)
+            commands.extend(cmds)
+            self._connection.write(self.ESCAPE_CHAR)
         logging.debug(f"Comandos do nível 4 guest: {commands}")
         return commands
 
-    def get_guest_commands5(self) -> list:
+    def get_guest_commands5(self) -> List[str]:
+        """
+        Obtém os comandos do nível 5 guest.
+        """
         logging.info("Obtendo os comandos do nível 5 guest...")
-        commands = []
-        for i in self.__commands_guest4:
-            command_to_send = self.substitute_placeholders(i, PLACEHOLDERS_GUEST5, root_command=i)
+        commands: List[str] = []
+        for base_cmd in self._commands_guest4:
+            command_to_send = self.substitute_placeholders(base_cmd, PLACEHOLDERS_GUEST5, root_command=base_cmd)
             logging.debug(f"Enviando comando para o DUT: {command_to_send} ?")
-            self.__connection.write(command_to_send.encode("ascii") + b" ?")
-            ret = (self.__connection.read_until(
-                    b'<' + self.__hostname.encode("ascii") + b'>' + command_to_send.encode("ascii"),
-                    timeout=5
-                )
-                .decode("utf-8")
-                .split("\n")
-            )
+            self._connection.write(f"{command_to_send} ?".encode("ascii"))
+            ret = self._connection.read_until(self._prompt + command_to_send.encode("ascii"), timeout=5)
+            response = ret.decode("utf-8").splitlines()
             logging.debug("Saída completa do DUT:")
-            for line in ret:
+            for line in response:
                 logging.debug(line)
-            baseline_indent = None
-            for j, line in enumerate(ret):
-                if 0 < j < len(ret) - 1 and line.strip():
-                    current_indent = len(line) - len(line.lstrip())
-                    if baseline_indent is None:
-                        baseline_indent = current_indent
-                    if current_indent == baseline_indent:
-                        command_part = line.strip().split()[0]
-                        commands.append(i + " " + command_part)
-            self.__connection.write(chr(24).encode("ascii"))
+            cmds = self._parse_guest_response(base_cmd, response, start=1, end=len(response) - 1)
+            commands.extend(cmds)
+            self._connection.write(self.ESCAPE_CHAR)
         logging.debug(f"Comandos do nível 5 guest: {commands}")
         return commands
+
+    def close(self) -> None:
+        """Fecha a conexão Telnet."""
+        if self._connection:
+            self._connection.close()
+            logging.info("Conexão Telnet fechada.")
