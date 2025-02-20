@@ -41,7 +41,7 @@ def save_tree_features(modelo: str, dicionario: dict) -> None:
     guest2 = filter_commands(dicionario.get("commands_guest2", []))
     guest3 = filter_commands(dicionario.get("commands_guest3", []))
     guest4 = filter_commands(dicionario.get("commands_guest4", []))
-    guest5 = filter_commands(dicionario.get("commands_guest5", []))
+    # guest5 = filter_commands(dicionario.get("commands_guest5", []))
 
     # Define o caminho completo para o arquivo
     file_path = f"resource/Commands_{modelo}_version_{firmware}.txt"
@@ -82,15 +82,15 @@ def save_tree_features(modelo: str, dicionario: dict) -> None:
                         connector4 = "└── " if (l == len(children4) - 1) else "├── "
                         linha_g4 = g4[len(g3) + 1:]
                         f.write(prefix3 + connector4 + linha_g4 + "\n")
-                        if "Such" in g4 or "<cr>" in g4:
+                        if "Such" in g4 or "<cr>" in g4 or "TEXT" in g4:
                             continue
                         prefix4 = prefix3 + ("    " if (l == len(children4) - 1) else "│   ")
 
                 #         # Nível 5
-                        children5 = [cmd for cmd in guest5 if normalize_command(cmd).startswith(g4 + " ")]
-                        for m, g5 in enumerate(children5):
-                            connector5 = "└── " if (m == len(children5) - 1) else "├── "
-                            linha_g5 = g5[len(g4) + 1:]
-                            f.write(prefix4 + connector5 + linha_g5 + "\n")
-                            if "TEXT" in g5 or "<cr>" in g5:
-                                continue
+                        # children5 = [cmd for cmd in guest5 if normalize_command(cmd).startswith(g4 + " ")]
+                        # for m, g5 in enumerate(children5):
+                        #     connector5 = "└── " if (m == len(children5) - 1) else "├── "
+                        #     linha_g5 = g5[len(g4) + 1:]
+                        #     f.write(prefix4 + connector5 + linha_g5 + "\n")
+                        #     if "TEXT" in g5 or "<cr>" in g5:
+                        #         continue
