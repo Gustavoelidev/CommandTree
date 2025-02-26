@@ -18,7 +18,7 @@ from utils.save_tree_feature import save_tree_features
 from utils.compare_versions import compare_firmware_version
 
 # Exemplo de modelos já testados (pode vir de outro módulo)
-models = {1: "DUT1", 2:"DUT2" }
+models = {1: "DUT1", 2:"AP7739" }
 
 def obter_comandos_e_gerar_arquivo(op, ip, password, hostname):
     """

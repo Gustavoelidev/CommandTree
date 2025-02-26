@@ -7,7 +7,7 @@ from utils.compare_versions import compare_firmware_version
 
 
 # Modelos já testados com o sistema
-models = {1: "DUT-SW", 2:"DUT-AP" }
+models = {1: "DUT-SW", 2:"AP7739" }
 
 
 def check_ip(ip) -> None:
