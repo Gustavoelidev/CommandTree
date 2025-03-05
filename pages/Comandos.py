@@ -44,21 +44,25 @@ def comparar_comandos(modelo, dicionario):
 def mostrar_arquivo_gerado(modelo, dicionario):
     """
     Lê o arquivo gerado pela função save_tree_features e exibe um botão de download.
+    Retorna o conteúdo do arquivo e o nome do arquivo.
     """
+    # Gera o nome do arquivo com base no modelo e no firmware
     firmware = (
         str(dicionario.get("__version_data", ["unknown"])[0])
         .replace(".", "_")
         .replace(",", "")
     )
     file_name = f"Commands_{str(modelo)}_version_{firmware}.txt"
-    file_path = os.path.join("resource", file_name)
+    file_path = os.path.join("resource", file_name)  # Caminho completo do arquivo
+
+    # Verifica se o arquivo existe
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             file_content = f.read()
-        st.download_button("Baixar Arquivo", file_content, file_name=file_name)
-        st.text_area("Conteúdo do Arquivo", file_content, height=300)
+        return file_content, file_name  # Retorna o conteúdo e o nome do arquivo
     else:
         st.error("Arquivo não encontrado. Verifique se a árvore de comandos foi gerada corretamente.")
+        return None, None  # Retorna None para ambos os valores
 
 def main():
     st.title("Comandos e Árvore de Comandos")
@@ -87,6 +91,7 @@ def main():
                     dicionario = obter_comandos_e_gerar_arquivo(op, ip, password, hostname)
                     st.session_state["dicionario"] = dicionario
                     st.session_state["modelo"] = modelo_selecionado
+                    st.session_state["arquivo_gerado"] = True  # Define que o arquivo foi gerado
                     st.success("Arquivo gerado com sucesso!")
             except Exception as e:
                 # Exibe a mensagem de erro na web
@@ -94,16 +99,22 @@ def main():
                 # Encerra a função (ou simplesmente não prossegue com outras ações)
                 return
 
-    # Se os comandos já foram obtidos, apresenta as opções para o usuário
-    if "dicionario" in st.session_state:
-        st.markdown("### O que deseja fazer agora?")
-        acao = st.radio("Escolha uma opção:", ("Comparar Comandos", "Visualizar/baixar Arquivo"))
-        
-        if acao == "Comparar Comandos":
-            resultado = comparar_comandos(modelo_selecionado, st.session_state["dicionario"])
-            st.write(resultado)
-        elif acao == "Visualizar/baixar Arquivo":
-            mostrar_arquivo_gerado(modelo_selecionado, st.session_state["dicionario"])
+    # Se os comandos já foram obtidos e o arquivo foi gerado, apresenta as opções para o usuário
+    if "dicionario" in st.session_state and st.session_state.get("arquivo_gerado", False):
+        st.markdown("### Baixar arquivo")
 
+        # Gerar o conteúdo do arquivo e o nome do arquivo
+        conteudo, nome_arquivo = mostrar_arquivo_gerado(modelo_selecionado, st.session_state["dicionario"])
+
+        # Verifica se os valores não são None antes de criar o botão de download
+        if conteudo is not None and nome_arquivo is not None:
+            st.download_button(
+                label="Baixar Arquivo",
+                data=conteudo,
+                file_name=nome_arquivo,
+                mime="text/plain"
+            )
+            st.text_area("Conteúdo do Arquivo", conteudo, height=300)  # Exibe o conteúdo do arquivo
+            
 if __name__ == '__main__':
     main()
