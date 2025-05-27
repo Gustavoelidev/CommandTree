@@ -168,12 +168,12 @@ class GetCommands:
         self._connection: telnetlib.Telnet = telnetlib.Telnet(self._ip)
         logging.info(f"Iniciando a conexão Telnet com o IP: {self._ip}")
         self._version_data: List[str] = self.new_connection(
-            user="admin", password=self._password, hostname=self._hostname
+            user="ped", password=self._password, hostname=self._hostname
         )
         self._commands_guest1: List[str] = self.get_guest_commands1()
         self._commands_guest2: List[str] = self.get_guest_commands2()
         self._commands_guest3: List[str] = self.get_guest_commands3()
-        self._commands_guest4: List[str] = self.get_guest_commands4()
+        # self._commands_guest4: List[str] = self.get_guest_commands4()
         # self._commands_guest5: List[str] = self.get_guest_commands5()
 
         self.enter_sys_mode()  # Muda o contexto para o modo sys
@@ -250,7 +250,6 @@ class GetCommands:
         except Exception as e:
             logging.error(f"Erro durante a conexão: {e}")
             raise
-
     def get_firmware_version(self) -> List[str]:
         """
         Executa o comando 'display version' e extrai as informações do firmware,
@@ -265,20 +264,23 @@ class GetCommands:
             logging.debug("Resposta completa do comando 'display version':")
             for idx, line in enumerate(raw_response.splitlines()):
                 logging.debug(f"Linha {idx}: {line}")
-            
+
+            # Expressão regular para pegar o OS Version
             os_version_match = re.search(
-                r"(?:INTELBRAS OS Software|H3C Comware Software),\s*Version\s*([\d\.]+,\s*(?:ESS\s*\d+|Release\s*\d+))",
+                r"INTELBRAS OS Software,\s*Version\s*([\d\.]+,\s*\w+\s*\d+)",
                 raw_response
             )
+            # Expressão regular para pegar o Boot Version
             boot_version_match = re.search(
-               r"Boot image version:\s*([\d\.]+,\s*(?:ESS\s*\d+|Release\s*\d+))", 
+                r"Boot image version:\s*([\d\.]+,\s*\w+\s*\d+)",
                 raw_response
             )
+            # Expressão regular para pegar a data de compilação
             compiled_match = re.search(
-                r"Compiled\s+([A-Za-z]+\s+\d+\s+\d+\s+[\d:]+)", 
+                r"Compiled\s+([A-Za-z]+\s+\d+\s+\d+\s+[\d:]+)",
                 raw_response
             )
-            
+
             if not os_version_match:
                 logging.error("Não foi possível extrair a versão do OS.")
                 raise ValueError("Formato da resposta não contém a versão do OS.")
@@ -288,23 +290,78 @@ class GetCommands:
             if not compiled_match:
                 logging.error("Não foi possível extrair a data de compilação.")
                 raise ValueError("Formato da resposta não contém a data de compilação.")
-            
+
             os_version = os_version_match.group(1).strip()
             boot_version = boot_version_match.group(1).strip()
             compiled = compiled_match.group(1).strip()
-            
+
             logging.debug(f"OS Version extraída: {os_version}")
             logging.debug(f"Boot image version extraída: {boot_version}")
             logging.debug(f"Compiled extraída: {compiled}")
-            
+
             version.extend([os_version, boot_version, compiled])
             logging.info(f"Informações extraídas - OS Version: {os_version}, Boot Version: {boot_version}, Compiled: {compiled}")
-        
+
         except Exception as e:
             logging.error(f"Erro ao obter a versão do firmware: {e}")
             raise
-        
+
         return version
+
+    # def get_firmware_version(self) -> List[str]:
+    #     """
+    #     Executa o comando 'display version' e extrai as informações do firmware,
+    #     versão da imagem de boot e data de compilação, registrando logs detalhados.
+    #     """
+    #     version: List[str] = []
+    #     try:
+    #         logging.info("Iniciando a obtenção da versão do firmware...")
+    #         self._connection.write(b"display version\n")
+    #         raw_response = self._connection.read_until(self._prompt).decode("utf-8")
+            
+    #         logging.debug("Resposta completa do comando 'display version':")
+    #         for idx, line in enumerate(raw_response.splitlines()):
+    #             logging.debug(f"Linha {idx}: {line}")
+            
+    #         os_version_match = re.search(
+    #             r"(?:INTELBRAS OS Software|H3C Comware Software),\s*Version\s*([\d\.]+,\s*\w+\s*\d+)",
+    #             raw_response
+    #         )
+    #         boot_version_match = re.search(
+    #            r"Boot image version:\s*([\d\.]+,\s*(?:ESS\s*\d+|Release\s*\d+))", 
+    #             raw_response
+    #         )
+    #         compiled_match = re.search(
+    #             r"Compiled\s+([A-Za-z]+\s+\d+\s+\d+\s+[\d:]+)", 
+    #             raw_response
+    #         )
+            
+    #         if not os_version_match:
+    #             logging.error("Não foi possível extrair a versão do OS.")
+    #             raise ValueError("Formato da resposta não contém a versão do OS.")
+    #         if not boot_version_match:
+    #             logging.error("Não foi possível extrair a versão da imagem de boot.")
+    #             raise ValueError("Formato da resposta não contém a versão da imagem de boot.")
+    #         if not compiled_match:
+    #             logging.error("Não foi possível extrair a data de compilação.")
+    #             raise ValueError("Formato da resposta não contém a data de compilação.")
+            
+    #         os_version = os_version_match.group(1).strip()
+    #         boot_version = boot_version_match.group(1).strip()
+    #         compiled = compiled_match.group(1).strip()
+            
+    #         logging.debug(f"OS Version extraída: {os_version}")
+    #         logging.debug(f"Boot image version extraída: {boot_version}")
+    #         logging.debug(f"Compiled extraída: {compiled}")
+            
+    #         version.extend([os_version, boot_version, compiled])
+    #         logging.info(f"Informações extraídas - OS Version: {os_version}, Boot Version: {boot_version}, Compiled: {compiled}")
+        
+    #     except Exception as e:
+    #         logging.error(f"Erro ao obter a versão do firmware: {e}")
+    #         raise
+        
+    #     return version
 
     def substitute_placeholders(self, command: str, placeholders: List[PlaceholderType], root_command: str = "") -> str:
         """
@@ -405,22 +462,22 @@ class GetCommands:
         logging.debug(f"Comandos do nível 3 guest: {commands}")
         return commands
 
-    def get_guest_commands4(self) -> List[str]:
-        """
-        Obtém os comandos do nível 4 guest.
-        """
-        logging.info("Obtendo os comandos do nível 4 guest...")
-        commands: List[str] = []
-        for base_cmd in self._commands_guest3:
-            command_to_send = self.substitute_placeholders(base_cmd, PLACEHOLDERS_GUEST4, root_command=base_cmd)
-            self._connection.write(f"{command_to_send} ?".encode("ascii"))
-            ret = self._connection.read_until(self._prompt + command_to_send.encode("ascii"), timeout=5)
-            response = ret.decode("utf-8").splitlines()
-            cmds = self._parse_guest_response(base_cmd, response, start=1, end=len(response) - 1)
-            commands.extend(cmds)
-            self._connection.write(self.ESCAPE_CHAR)
-        logging.debug(f"Comandos do nível 4 guest: {commands}")
-        return commands
+    # def get_guest_commands4(self) -> List[str]:
+    #     """
+    #     Obtém os comandos do nível 4 guest.
+    #     """
+    #     logging.info("Obtendo os comandos do nível 4 guest...")
+    #     commands: List[str] = []
+    #     for base_cmd in self._commands_guest3:
+    #         command_to_send = self.substitute_placeholders(base_cmd, PLACEHOLDERS_GUEST4, root_command=base_cmd)
+    #         self._connection.write(f"{command_to_send} ?".encode("ascii"))
+    #         ret = self._connection.read_until(self._prompt + command_to_send.encode("ascii"), timeout=5)
+    #         response = ret.decode("utf-8").splitlines()
+    #         cmds = self._parse_guest_response(base_cmd, response, start=1, end=len(response) - 1)
+    #         commands.extend(cmds)
+    #         self._connection.write(self.ESCAPE_CHAR)
+    #     logging.debug(f"Comandos do nível 4 guest: {commands}")
+    #     return commands
 
     # def get_guest_commands5(self) -> List[str]:
     #     """
@@ -507,9 +564,9 @@ class GetCommands:
 
     def get_sys_commands2(self) -> List[str]:
         """
-        Obtém os comandos do nível 2 guest.
+        Obtém os comandos do nível 2 sys.
         """
-        logging.info("Obtendo os comandos do nível 2 guest...")
+        logging.info("Obtendo os comandos do nível 2 sys...")
         commands: List[str] = []
         for base_cmd in self._commands_sys1:
             self._connection.write(f"{base_cmd} ?".encode("ascii"))
@@ -524,7 +581,7 @@ class GetCommands:
 
     def get_sys_commands3(self) -> List[str]:
         """
-        Obtém os comandos do nível 3 guest.
+        Obtém os comandos do nível 3 sys.
         """
         logging.info("Obtendo os comandos do nível 3 sys...")
         commands: List[str] = []
@@ -547,7 +604,7 @@ class GetCommands:
             "commands_guest1": self._commands_guest1,
             "commands_guest2": self._commands_guest2,
             "commands_guest3": self._commands_guest3,
-            "commands_guest4": self._commands_guest4,
+            # "commands_guest4": self._commands_guest4,
             # "commands_guest5": self._commands_guest5,
             "commands_sys1": self._commands_sys1,
             "commands_sys2": self._commands_sys2,

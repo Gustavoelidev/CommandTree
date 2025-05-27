@@ -54,7 +54,7 @@ def save_tree_features(modelo: str, dicionario: dict) -> None:
     guest1 = filter_commands(dicionario.get("commands_guest1", []))
     guest2 = filter_commands(dicionario.get("commands_guest2", []))
     guest3 = filter_commands(dicionario.get("commands_guest3", []))
-    guest4 = filter_commands(dicionario.get("commands_guest4", []))
+    # guest4 = filter_commands(dicionario.get("commands_guest4", []))
     # guest5 = filter_commands(dicionario.get("commands_guest5", []))
     sys1 = filter_commands(dicionario.get("commands_sys1", []))
     sys2 = filter_commands(dicionario.get("commands_sys2", []))
@@ -96,13 +96,13 @@ def save_tree_features(modelo: str, dicionario: dict) -> None:
                     prefix3 = prefix2 + ("    " if (k == len(children3) - 1) else "│   ")
 
         #             # Nível 4
-                    children4 = [cmd for cmd in guest4 if normalize_command(cmd).startswith(g3 + " ")]
-                    for l, g4 in enumerate(children4):
-                        connector4 = "└── " if (l == len(children4) - 1) else "├── "
-                        linha_g4 = g4[len(g3) + 1:]
-                        f.write(prefix3 + connector4 + linha_g4 + "\n")
-                        if "Such" in g4 or "<cr>" in g4:
-                            continue
+                    # children4 = [cmd for cmd in guest4 if normalize_command(cmd).startswith(g3 + " ")]
+                    # for l, g4 in enumerate(children4):
+                    #     connector4 = "└── " if (l == len(children4) - 1) else "├── "
+                    #     linha_g4 = g4[len(g3) + 1:]
+                    #     f.write(prefix3 + connector4 + linha_g4 + "\n")
+                    #     if "Such" in g4 or "<cr>" in g4:
+                    #         continue
                         # Nível 5 (comentado; descomente se necessário)
                         # prefix4 = prefix3 + ("    " if (l == len(children4) - 1) else "│   ")
                         # children5 = [cmd for cmd in guest5 if normalize_command(cmd).startswith(g4 + " ")]

@@ -4,25 +4,23 @@ from difflib import Differ
 
 # Dicionário global para armazenar os arquivos encontrados
 dicionario_arquivos = {}
-modelo = ""
+modelo = []
 firmware = ""
 
 
-def compare_firmware_version(model: str, firmware_dut: str) -> None:
+def compare_firmware_version(models: list[str], firmware_dut: str) -> None:
     global modelo, firmware
-    modelo = model
+    modelo = models  # Ex: ["SC 3570", "SC 3170"]
     firmware = firmware_dut.replace(".", "_").replace(",", "")
     lista_arquivos = []
 
-    # Caminha pela pasta 'resource' e coleta os nomes dos arquivos
     for root, dirs, files in os.walk('./resource'):
         for file in files:
             lista_arquivos.append(file)
 
-    # Preenche o dicionário com os arquivos que contêm "Commands" e o modelo
     i = 1
     for arquivo in lista_arquivos:
-        if "Commands" in arquivo and model in arquivo:
+        if "Commands" in arquivo and any(model in arquivo for model in models):
             dicionario_arquivos[i] = arquivo
             i += 1
 
@@ -62,7 +60,13 @@ def make_comparison(arquivo: str) -> None:
     
     # Monta os caminhos completos dos arquivos
     arquivo_1 = os.path.join("resource", arquivo)
-    arquivo_2 = os.path.join("resource", f"Commands_{modelo}_version_{firmware}.txt")
+    # Extrai o modelo (por exemplo, SC_3570) e converte para SC 3570
+    parte_nome = arquivo.split("Commands_")[1]
+    modelo_detectado = parte_nome.split("_version_")[0].replace("_", " ")
+
+    arquivo_2 = os.path.join("resource", f"Commands_{modelo_detectado.replace(' ', '_')}_version_{firmware}.txt")
+
+
     
     st.write(f"Comparação entre os arquivos: {arquivo_1} e {arquivo_2}")
 
@@ -81,7 +85,10 @@ def make_comparison(arquivo: str) -> None:
         st.error(f"Erro ao abrir os arquivos: {e}")
         return
 
-    log_name = os.path.join("resource", f"{modelo}_Diff_between_versions_{firmware}_and_{firmware_to_compare}.html")
+    log_name = os.path.join("resource", f"{modelo_detectado.replace(' ', '_')}_Diff_between_versions_{firmware}_and_{firmware_to_compare}.html")
+
+
+
     conteudo_html = (
         "<html>\n<head>\n<title>LOG</title>\n</head>"
         "<body><h1>CLI Commands</h1>"
