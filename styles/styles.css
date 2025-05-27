@@ -1,0 +1,35 @@
+.stButton button {
+    font-family: "SF Pro", "Roboto", "Arial", "Helvetica", sans-serif;
+    background-image: url("../styles/img/");
+    font-weight: 500;
+    background: #00a335;
+    color: #ffffff;
+    border: 0;
+    border-radius: 3px;
+    padding: 15px 45px;
+    font-size: 16px;
+    transition: background 0.3s ease; /* adiciona uma transição suave */
+}
+
+.stButton button:hover {
+    background: #00863F;
+}
+
+.stBaseButton-secondary {
+    font-family: "SF Pro", "Roboto", "Arial", "Helvetica", sans-serif;
+    background-image: url("../styles/img/");
+    font-weight: 500;
+    background: #00a335;
+    color: #ffffff;
+    border: 0;
+    border-radius: 3px;
+    padding: 15px 45px;
+    font-size: 16px;
+    transition: background 0.3s ease; /* adiciona uma transição suave */
+}
+
+.stBaseButton-secondary {
+    background: #00863F;
+}
+
+/* teste */
