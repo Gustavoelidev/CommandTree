@@ -18,7 +18,7 @@ from utils.save_tree_feature import save_tree_features
 from utils.compare_versions import compare_firmware_version
 
 # Exemplo de modelos já testados (pode vir de outro módulo)
-models = {1: "WA7539", 2:"AP7739", 3: "SC-3570-48GP-6X", 4: "SC-3570-48G-6X", 5: "SC-3570-24S-8G-4X", 6:"SC-3170-24GP-4X", 7:"SC-3170-24G-4X" }
+models = {1: "WA7539", 2:"AP7739", 3: "SC-3570-48GP-6X", 4: "SC-3570-48G-6X", 5: "SC-3570-24S-8G-4X", 6:"SC-3170-24GP-4X", 7:"SC-3170-24G-4X", 8:"SC 5530-24Y-8H", 9:"SC-5530-48Y-8H"}
 
 def obter_comandos_e_gerar_arquivo(op, ip, password, hostname):
     """
